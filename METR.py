@@ -12,10 +12,11 @@ import numpy as np
 from pandas import ExcelWriter
 from pandas import ExcelFile
 import METR_functions as fun
+import numpy_financial as npf
 
 '''read the data '''
 
-df = pd.read_excel('METR parameters by Country.xlsx', 'Sheet1')
+df = pd.read_csv('metrparams.csv')
 
 #Param_val = df["Param_values"].values
 
@@ -99,7 +100,7 @@ METR - Equipments
 -----------------------------
 '''
 
-df['Z_E'] = fun.NPV_Depr_DBM(0, df['tax_depreciation_equipment'], df['r_f'])
+df['Z_E'] = fun.NPV_Depr(0, df['tax_depreciation_equipment'], df['r_f'], SLM=True)
 #print("NPV of tax depreciation allowance for equipment 'Z_E' is", round(Z_E, 3))
 
 df['r_g_E'] = fun.gross_pretax_rate(df['capital_input_sale_tax'], df['r_f'], df['inflation'], 
@@ -119,7 +120,7 @@ METR-Buildings
 -------------------------------
 '''
 
-df['Z_B'] = fun.NPV_Depr_DBM(0, df['tax_depreciation_building'], df['r_f'])
+df['Z_B'] = fun.NPV_Depr(0, df['tax_depreciation_building'], df['r_f'], SLM=True)
 #print("NPV of tax depreciation allowance for buildings 'Z_B' is", round(Z_B, 3))
 
 df['r_g_B'] = fun.gross_pretax_rate(df['capital_input_sale_tax'], df['r_f'], df['inflation'], 
@@ -139,7 +140,7 @@ METR-Land
 --------------------------------
 '''
 
-df['r_g_L'] = fun.gross_pretax_rate(0, df['r_f'], df['inflation'], 0, df['CIT_rate_2020'], 0, 0, 0, 0, A=3)
+df['r_g_L'] = fun.gross_pretax_rate(0, df['r_f'], df['inflation'], 0, df['CIT_rate_2020'], 0, df['land_transfer_tax'], df['property_tax'], 0, A=3)
 #print("Gross pre-tax real rate of return for land 'R_g' is", round(r_g_L*100, 2), '%')
 
 
@@ -153,7 +154,7 @@ print()
 METR-Inventory
 --------------------------------
 '''
-df['p_FIFO'] = np.where((df['inventory_accounting']=='FIFO')|(df['inventory_accounting']=='Optional'),1,0)
+df['p_FIFO'] = np.where((df['inventory_accounting']=='FIFO')|(df['inventory_accounting']=='Optional'),0.5,0)
 
 df['r_g_I'] = fun.gross_pretax_rate(0, df['r_f'], df['inflation'], 0, df['CIT_rate_2020'], 0, 0, 0, df['p_FIFO'], A=4)
 #print("Gross pre-tax real rate of return for Inventory 'R_g' is", round(r_g_I*100, 2), '%')
@@ -169,14 +170,17 @@ print()
 METR-Aggregate / Weighted
 --------------------------------
 '''
-df['METR_E_wt'] = df['METR_E']*df['capital_weight_equipment']
-df['METR_B_wt'] = df['METR_B']*df['capital_weight_building']
-df['METR_L_wt'] = df['METR_L']*df['capital_weight_land']
-df['METR_I_wt'] = df['METR_I']*df['capital_weight_inventory']
+df['r_g_overall'] = df['r_g_E'] *df['capital_weight_equipment'] + df['r_g_B']*df['capital_weight_building'] + \
+                    df['r_g_L']*df['capital_weight_land'] + df['r_g_I']*df['capital_weight_inventory']
 
-df['METR_Overall'] =  df['METR_E_wt'] + df['METR_B_wt']  + df['METR_L_wt'] + df['METR_I_wt']
+df['METR_Overall'] =  fun.METR(df['r_g_overall'], df['r_n'])
+
 print("Weighted average METR in Manufacturing sector is: ", round(df['METR_Overall']*100, 2), '%')
 
 print()
+# df['N'] = 1/df['tax_depreciation_equipment']
+# df['EATR'] = fun.get_EATR_dev(df['CIT_rate_2020'], df['domestic_tax_rate_dividend'], df['domestic_pit_capital_gain'], df['t_rho'], df['r_f'],df['N'], 0, df['economic_depreciation_equipment'], df['r_n'])
+
+df=df[['Country', 'CIT_rate_2020', 'METR_E', 'METR_B', 'METR_L', 'METR_I', 'METR_Overall']]
 
 df.to_csv("METR_Countries.csv", index=False)
