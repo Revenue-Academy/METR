@@ -23,7 +23,9 @@ import threading
                                 Read the data for METR parameters
 -----------------------------------------------------------------------------------------------
 '''
+# data1 = pd.read_excel('metr_paramsnew.xlsx')
 data1 = pd.read_excel('metr_paramsnew.xlsx')
+
 country_list = []
 for countries in data1['Country']:
     country_list+=[countries]
