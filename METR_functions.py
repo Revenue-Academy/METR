@@ -240,7 +240,7 @@ def METR(r_g, r_n):
     pre-tax and post-tax rate of return to pre-tax rate of return
     '''
     
-    METR = (r_g - r_n)/r_g
+    METR = (r_g - r_n)/abs(r_g)
     return METR
     
 

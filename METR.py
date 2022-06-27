@@ -120,7 +120,7 @@ METR-Buildings
 -------------------------------
 '''
 
-df['Z_B'] = fun.NPV_Depr(0, df['tax_depreciation_building'], df['r_f'], SLM=True)
+df['Z_B'] = fun.NPV_Depr(0, df['tax_depreciation_building'], df['r_f'], SLM=False)
 #print("NPV of tax depreciation allowance for buildings 'Z_B' is", round(Z_B, 3))
 
 df['r_g_B'] = fun.gross_pretax_rate(df['capital_input_sale_tax'], df['r_f'], df['inflation'], 
@@ -170,17 +170,18 @@ print()
 METR-Aggregate / Weighted
 --------------------------------
 '''
-df['r_g_overall'] = df['r_g_E'] *df['capital_weight_equipment'] + df['r_g_B']*df['capital_weight_building'] + \
-                    df['r_g_L']*df['capital_weight_land'] + df['r_g_I']*df['capital_weight_inventory']
+# df['r_g_overall'] = df['r_g_E'] *df['capital_weight_equipment'] + df['r_g_B']*df['capital_weight_building'] + \
+#                     df['r_g_L']*df['capital_weight_land'] + df['r_g_I']*df['capital_weight_inventory']
 
-df['METR_Overall'] =  fun.METR(df['r_g_overall'], df['r_n'])
-
+# df['r_g_overall'] = df['r_g_E'] *df['capital_weight_equipment'] + df['r_g_B']*df['capital_weight_building']                    
+# df['METR_Overall'] =  fun.METR(df['r_g_overall'], df['r_n'])
+df['METR_Overall'] = df['METR_E'] *df['capital_weight_equipment'] + df['METR_B']*df['capital_weight_building']
 print("Weighted average METR in Manufacturing sector is: ", round(df['METR_Overall']*100, 2), '%')
 
 print()
 # df['N'] = 1/df['tax_depreciation_equipment']
 # df['EATR'] = fun.get_EATR_dev(df['CIT_rate_2020'], df['domestic_tax_rate_dividend'], df['domestic_pit_capital_gain'], df['t_rho'], df['r_f'],df['N'], 0, df['economic_depreciation_equipment'], df['r_n'])
 
-df=df[['Country', 'CIT_rate_2020', 'METR_E', 'METR_B', 'METR_L', 'METR_I', 'METR_Overall']]
+#df=df[['Country', 'CIT_rate_2020', 'METR_E', 'METR_B', 'METR_L', 'METR_I', 'METR_Overall']]
 
 df.to_csv("METR_Countries.csv", index=False)
