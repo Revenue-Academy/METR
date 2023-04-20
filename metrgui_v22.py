@@ -36,7 +36,7 @@ sector_list = [' ', 'Manufacturing', 'Services', 'Other']
 
 
 '''Convert csv to json file '''
-file = open('metrparams.csv')
+file = open('metr_paramsnew.csv')
 data = csv.DictReader(file)
 dict={}
 
