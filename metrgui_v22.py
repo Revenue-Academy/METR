@@ -246,7 +246,7 @@ def calc_metr():
 
     #npv of depr allowances
     Z_E = fun.NPV_Depr(phi, alpha_E, r_f, SLM=False)
-    Z_B = fun.NPV_Depr(0, alpha_B, r_f, SLM=True)
+    Z_B = fun.NPV_Depr(0, alpha_B, r_f, SLM=False)
 
     #gross pre tax ROR for assets
     r_g_E = fun.gross_pretax_rate_equip_bld(T_d, r_f, pi, delta_E, u, Z_E)
