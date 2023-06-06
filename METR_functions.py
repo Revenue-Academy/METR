@@ -244,11 +244,14 @@ def METR(r_g, r_n):
     return METR
     
 
+def get_EATR(r_g, r_infra, u, metr):
+    x = r_g/r_infra
+    EATR = x*metr + (1 - x)*u
+    return EATR
 
 
 
-
-def get_EATR(r_n, delta, u, N, phi, r_f):
+def get_EATRalt(r_n, delta, u, N, phi, r_f):
     alpha=get_alpha(r_f, N, phi)
     print(alpha)
     Z = NPV_Depr_DBM(0, alpha, r_f)

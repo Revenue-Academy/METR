@@ -1,0 +1,8 @@
+Country,CIT_rate_2020,inflation,tax_depreciation_building,tax_depreciation_equipment,inventory_accounting,inv_acc_flag,asset_tax,capital_input_sale_tax,capital_transfer_tax,financial_transfer_tax_flag,dividend_payout_ratio,dividend_distribution_tax,domestic_tax_rate_dividend,international_interest_rate,debt_asset_ratio,domestic_pit_interest,domestic_pit_capital_gain,economic_depreciation_equipment,economic_depreciation_building,investment_allowance_equipment,investment_allowance_building,property_tax,mining_royalty,capital_weight_equipment,capital_weight_building,capital_weight_land,capital_weight_inventory
+Costa Rica,0.26,0.0827,0.05,0.1,FIFO,0,0,0,0.03,0,0.5,0,0.05,0.1077,0.4,0.07,0.1,0.205,0.09,0,0,0.009,0,0.524,0.285,0.009,0.181
+Dominican Republic,0.25,0.0882,0.033,0.33,FIFO,0,0,0,0.02,0,0.5,0,0.05,0.1185,0.4,0.25,0.1,0.205,0.09,0,0,0,0,0.524,0.285,0.009,0.181
+El Salvador,0.3,0.0719,0.02,0.1,FIFO,0,,0,0.025,0,0.5,0,0.1,0.0635,0.4,0.25,0.15,0.205,0.09,0,0,0.0025,0,0.524,0.285,0.009,0.181
+Guatemala,0.3,0.0687,0.05,0.2,FIFO,0,0,0,0.03,0,0.5,0,0.1,0.1192,0.4,0.3,0.1,0.205,0.09,0,0,0,0,0.524,0.285,0.009,0.181
+Honduras,0.25,0.0907,0.025,0.1,FIFO,0,0,0,0.015,0,0.5,0,0.1,0.1461,0.4,0.25,0.1,0.205,0.09,0,0,0,0,0.524,0.285,0.009,0.181
+Nicaragua,0.3,0.1045,0.033,0.1,FIFO,0,0,0,0,0,0.5,0,0.15,0.0923,0.4,0.3,0.1,0.205,0.09,0,0,0.01,0,0.524,0.285,0.009,0.181
+Panama,0.27,0.0286,0.05,0.15,FIFO,0,0,0,0.03,0,0.5,0,0.1,0.0822,0.4,0.25,0.25,0.205,0.09,0,0,0.01,0,0.524,0.285,0.009,0.181

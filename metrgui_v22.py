@@ -24,7 +24,8 @@ import threading
 -----------------------------------------------------------------------------------------------
 '''
 # data1 = pd.read_excel('metr_paramsnew.xlsx')
-data1 = pd.read_excel('metr_paramsnew.xlsx')
+#data1 = pd.read_excel('metr_paramsnew.xlsx')
+data1 = pd.read_csv('metr_paramscentam.csv')
 
 country_list = []
 for countries in data1['Country']:
@@ -36,7 +37,8 @@ sector_list = [' ', 'Manufacturing', 'Services', 'Other']
 
 
 '''Convert csv to json file '''
-file = open('metr_paramsnew.csv')
+#file = open('metr_paramsnew.csv')
+file = open('metr_paramscentam.csv')
 data = csv.DictReader(file)
 dict={}
 
@@ -152,6 +154,9 @@ def selected_country_params(event):
     METR['METR - Land'].delete(0, END)
     METR['METR - Inventory'].delete(0, END)
     METR['METR - Overall'].delete(0, END)
+    rg.delete(0, END)
+    rn.delete(0, END)
+    EATR.delete(0, END)
     
     inv_acc.delete(0, END)
     inv_acc.insert(0, data[country.get()]['inventory_accounting'])
@@ -174,7 +179,10 @@ def selected_country_params(event):
         corp_param_val[param].delete(0, END)
         corp_param_val[param].insert(0, data[country.get()][data_corpparam_col_list[i]])
         i+=1
-
+    
+    '''default value of 15% for infra-marginal ROR '''
+    ror.delete(0, END)
+    ror.insert(0, 0.15)
 
 def selected_sector_params(event):
     country['state'] = 'disabled'   
@@ -191,15 +199,19 @@ def enable_CB_country():
 
 ''' Create a scatter plot of METR by country in frame 1 '''   
 
-df=pd.read_csv('METR_Countries.csv')
+df=pd.read_csv('centam_countries.csv')
 df=df[['Country', 'CIT_rate_2020', 'METR_Overall']]
 df=df[(df['METR_Overall']<1)&(df['METR_Overall']>-1)]
 fig=Figure(figsize=(7, 7))
 ax1=fig.add_subplot(111)
 ax1.scatter(df.CIT_rate_2020, df.METR_Overall, c=df.METR_Overall)
+for country in df.Country:
+    ax1.text(df.CIT_rate_2020[df.Country==country], df.METR_Overall[df.Country==country], country[:3])
+
 ax1.set_title('METR by country', fontsize=24, color='black', weight='bold')
 ax1.set_xlabel('CIT rate', fontsize=18, color='blue', weight='bold')
 ax1.set_ylabel('METR', fontsize=18, color='blue', weight='bold')
+
 canvas = FigureCanvasTkAgg(fig, master=frame1)
 canvas.get_tk_widget().pack()
 canvas.draw() 
@@ -238,34 +250,55 @@ def calc_metr():
     #Corp params
     beta= float(corp_param_val['Debt asset ratio'].get())
     dpr= float(corp_param_val['Dividend payout ratio'].get())
-    r_d = r_d + pi
+    #r_d = r_d + pi
     t_rho=fun.get_tax_rate_equity(dpr, t_div, ddt, t_g)
+    print("tax rate on equity income is ", t_rho)
     rho_n=fun.get_cost_of_equity(r_d, m, t_rho)
+    print("cost of equity is ", rho_n)
     r_f=fun.get_cost_of_financing(r_d, beta, u, rho_n)
+    print("cost of financing is ", r_f)
     r_n=fun.get_hurdle_rate(beta, r_d, rho_n, pi)
-
+    print("hurdle rate of return is ", r_n)
+    
     #npv of depr allowances
     Z_E = fun.NPV_Depr(phi, alpha_E, r_f, SLM=False)
+    print("NPV of tax depr allowances for equipment is ", Z_E)
     Z_B = fun.NPV_Depr(0, alpha_B, r_f, SLM=False)
-
+    print("NPV of tax depr allowances for buildings is ", Z_B)
+    
     #gross pre tax ROR for assets
     r_g_E = fun.gross_pretax_rate_equip_bld(T_d, r_f, pi, delta_E, u, Z_E)
+    print("Gross pre-tax marginal rate of return (equipment) is ", r_g_E)
     r_g_B = fun.gross_pretax_rate_equip_bld(T_d, r_f, pi, delta_B, u, Z_B)
+    print("Gross pre-tax marginal rate of return (buildings) is ", r_g_B)
     r_g_L = fun.gross_pretax_rate_land(r_f, pi, u, T_L, T_P)
+    print("Gross pre-tax marginal rate of return (Land) is ", r_g_L)
     r_g_I = fun.gross_pretax_rate_inventory(r_f, pi, u, p_FIFO)
+    print("Gross pre-tax marginal rate of return (inventory) is ", r_g_I)
     metr_E = fun.METR(r_g_E, r_n)
+    print("METR (equipment) is ", metr_E)
     metr_B = fun.METR(r_g_B, r_n)
+    print("METR (buildings) is ", metr_B)
     metr_L = fun.METR(r_g_L, r_n)
+    print("METR (land) is ", metr_L)
     metr_I = fun.METR(r_g_I, r_n)
+    print("METR (inventory) is ", metr_I)
     wt_eq = float(corp_param_val['Weight - equipment'].get())
     wt_bld = float(corp_param_val['Weight - building'].get())
     wt_land= float(corp_param_val['Weight - land'].get())
     wt_inv= float(corp_param_val['Weight - inventory'].get())
     metr_overall = (wt_eq*metr_E + wt_bld*metr_B + wt_land*metr_L + wt_inv*metr_I)
+    print("METR (overall) is ", metr_overall)
+    r_g_overall = r_n/(1 - metr_overall)
+    print("r_g_overall is ", r_g_overall)
+    
     metr_E = "{:.2%}".format(fun.METR(r_g_E, r_n))
     metr_B = "{:.2%}".format(fun.METR(r_g_B, r_n))
     metr_L = "{:.2%}".format(fun.METR(r_g_L, r_n))
     metr_I = "{:.2%}".format(fun.METR(r_g_I, r_n))
+    
+    r_infra = float(ror.get())
+    eatr = "{:.2%}".format(fun.get_EATR(r_g_overall, r_infra, u, metr_overall))
 
     METR['METR  - Equipment'].delete(0, END)
     METR['METR  - Equipment'].insert(0, metr_E)
@@ -278,7 +311,14 @@ def calc_metr():
     METR['METR - Overall'].delete(0, END)
     METR['METR - Overall'].insert(0, "{:.2%}".format(metr_overall))
     
-    con_name=country.get()
+    EATR.delete(0, END)
+    EATR.insert(0, eatr)
+    rg.delete(0, END)
+    rg.insert(0, "{:.2%}".format(r_g_overall))
+    rn.delete(0, END)
+    rn.insert(0, "{:.2%}".format(r_n))
+    
+    #con_name=country.get()
     fig=Figure(figsize=(7, 7))
     ax1=fig.add_subplot(111)
     ax1.scatter(df.CIT_rate_2020, df.METR_Overall, c=df.METR_Overall)
@@ -286,7 +326,10 @@ def calc_metr():
     ax1.set_xlabel('CIT rate', fontsize=18, color='blue', weight='bold')
     ax1.set_ylabel('METR', fontsize=18, color='blue', weight='bold')
     ax1.scatter(u, metr_overall)
-    ax1.text(u, metr_overall, con_name[:3], fontsize=18, color='red')
+    #ax1.text(u, metr_overall, con_name[:3], fontsize=18, color='red')
+    for country in df.Country:
+        ax1.text(df.CIT_rate_2020[df.Country==country], df.METR_Overall[df.Country==country], country[:3])
+    #ax1.text(u, metr_overall, con_name[:3], fontsize=18, color='red')
     plt.show()
     canvas = FigureCanvasTkAgg(fig, master=frame1)
     canvas.get_tk_widget().pack()
@@ -370,10 +413,10 @@ for param in tax_param_list1:
     tax_param_val[param].place(relx=x_init+x_right_step, rely=(y_init+num*y_down_step), anchor='w')
     num+=1
 
-'''Create a exit button '''
-exit_button=Button(root, text="Exit", height=1, width=5, command=root.destroy)
-exit_button.config(font=fontStyle_sub_title, fg="red", borderwidth=1)
-exit_button.place(relx=x_init+1.5*x_right_step, rely=y_init+num*y_down_step, anchor='w')
+# '''Create a exit button '''
+# exit_button=Button(root, text="Exit", height=1, width=5, command=root.destroy)
+# exit_button.config(font=fontStyle_sub_title, fg="red", borderwidth=1)
+# exit_button.place(relx=x_init+1.5*x_right_step, rely=y_init+num*y_down_step, anchor='w')
 
 ''' Create a Label and entry widget for corporate params '''
 corpparam_label = Label(root, text='Corporate parameters', font=fontStyle_sub_title)
@@ -401,25 +444,61 @@ for metr in metr_list:
     METR[metr].place(relx=x_init+2.25*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
     num1+=1
 
-''' Create a button for computing METR '''
+'''Create labels for pre-tax ROR values'''
+
+rglabel = Label(root, text="Marginal pre-tax ROR", font=fontStyle_text)
+rglabel.place(relx=x_init+1.5*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+rg = Entry(root, width=entry_width, font=fontStyle_text, state='normal')
+rg.place(relx=x_init+2.25*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
 num1+=1
+
+'''Create labels for hurdle rate values'''
+
+rnlabel = Label(root, text="Hurdle ROR", font=fontStyle_text)
+rnlabel.place(relx=x_init+1.5*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+rn = Entry(root, width=entry_width, font=fontStyle_text, state='normal')
+rn.place(relx=x_init+2.25*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+num1+=1
+
+'''Create labels for infra-marginal ROR value for EATR'''
+
+RORlabel = Label(root, text='infra-marginal ROR', font=fontStyle_text)
+RORlabel.place(relx=x_init+1.5*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+ror = Entry(root, width=entry_width, font=fontStyle_text, state='normal')
+ror.place(relx=x_init+2.25*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+num1+=1
+
+'''Create labels for EATR values'''
+
+EATRlabel = Label(root, text='EATR', font=fontStyle_text)
+EATRlabel.place(relx=x_init+1.5*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+EATR = Entry(root, width=entry_width, font=fontStyle_text, state='normal')
+EATR.place(relx=x_init+2.25*x_right_step, rely=(y_init+num1*y_down_step), anchor='w')
+num1+=1
+
+''' Create a button for computing METR '''
+num1+=0
 Metr_button = Button(root, text="Compute METR", padx=10, pady=10, command=calc_metr)
 Metr_button.config(font=fontStyle_sub_sub_title, fg="red")
-Metr_button.place(relx=x_init+1.5*x_right_step, rely=y_init+num1*y_down_step, anchor="w")
+#Metr_button.place(relx=x_init+1.5*x_right_step, rely=y_init+num1*y_down_step, anchor="w")
+Metr_button.place(relx=x_init+1.5*x_right_step, rely=y_init+(num1+2)*y_down_step, anchor="w")
 
 
-num1+=2
+num1+=0
 '''Create a Combobox enable button '''
 enable_button1=Button(root, text="Enable Sector", height=1, width=11, command=enable_CB_sector)
 enable_button1.config(font=fontStyle_sub_sub_title, fg="red", borderwidth=1)
-enable_button1.place(relx=x_init+1.5*x_right_step, rely=y_init+num1*y_down_step, anchor='w')
+enable_button1.place(relx=x_init+3.5*x_right_step, rely=y_init+(num1+2)*y_down_step, anchor='w')
 
-num1+=2
+num1+=0
 '''Create a Combobox enable button '''
 enable_button2=Button(root, text="Enable Country", height=1, width=11, command=enable_CB_country)
 enable_button2.config(font=fontStyle_sub_sub_title, fg="red", borderwidth=1)
-enable_button2.place(relx=x_init+1.5*x_right_step, rely=y_init+num1*y_down_step, anchor='w')
+enable_button2.place(relx=x_init+4.1*x_right_step, rely=y_init+(num1+2)*y_down_step, anchor='w')
 
-
+'''Create a exit button '''
+exit_button=Button(root, text="Exit", height=1, width=5, command=root.destroy)
+exit_button.config(font=fontStyle_sub_title, fg="red", borderwidth=1)
+exit_button.place(relx=x_init+4.8*x_right_step, rely=y_init+(num1+2)*y_down_step, anchor='w')
 
 root.mainloop()
